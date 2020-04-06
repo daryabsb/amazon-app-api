@@ -1,0 +1,1 @@
+TEST_COMMAND_WITH_FLAKE8:   docker-compose run app sh -c "python manage.py test && flake8"

@@ -1,2 +1,2 @@
-# amazon-app-api
-This is an amazon like api bakend made with Django Rest Framework
+# product-app-api
+Product app api source code.
