@@ -62,12 +62,16 @@ class Tag(models.Model):
         return self.name
 
 
-class Ingredient(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
+
+    class Meta:
+        verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
 
     def __str__(self):
         return self.name
@@ -83,7 +87,8 @@ class Product(models.Model):
     time_minutes = models.IntegerField()
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)
-    ingredients = models.ManyToManyField('Ingredient')
+    categories = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True)
+    # categories = models.CharField(max_length=255, blank=True)
     tags = models.ManyToManyField('Tag')
     image = models.ImageField(null=True, upload_to=product_image_file_path)
 

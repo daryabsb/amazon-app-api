@@ -10,10 +10,10 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Product, Tag, Ingredient
+from core.models import Product, Tag, Category
 from product.serializers import ProductSerializer, ProductDetailSerializer
 
-RECIPES_URL = reverse('product:product-list')
+PRODUCTS_URL = reverse('product:myproduct-list')
 
 
 def image_upload_url(product_id):
@@ -31,9 +31,9 @@ def sample_tag(user, name='Main Course'):
     return Tag.objects.create(user=user, name=name)
 
 
-def sample_ingredient(user, name='Main Course'):
-    # Create and return a sample ingredient
-    return Ingredient.objects.create(user=user, name=name)
+def sample_category(user, name='Main Course'):
+    # Create and return a sample category
+    return Category.objects.create(user=user, name=name)
 
 
 def sample_product(user, **params):
@@ -56,7 +56,7 @@ class PublicProductAPITest(TestCase):
 
     def test_required_auth(self):
         # Test that authentication is required
-        res = self.client.get(RECIPES_URL)
+        res = self.client.get(PRODUCTS_URL)
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -77,7 +77,7 @@ class PrivateProductAPITest(TestCase):
         sample_product(user=self.user)
         sample_product(user=self.user)
 
-        res = self.client.get(RECIPES_URL)
+        res = self.client.get(PRODUCTS_URL)
 
         products = Product.objects.all().order_by('-id')
         serializer = ProductSerializer(products, many=True)
@@ -94,7 +94,7 @@ class PrivateProductAPITest(TestCase):
         sample_product(user=user2)
         sample_product(user=self.user)
 
-        res = self.client.get(RECIPES_URL)
+        res = self.client.get(PRODUCTS_URL)
 
         products = Product.objects.filter(user=self.user)
         serializer = ProductSerializer(products, many=True)
@@ -107,7 +107,7 @@ class PrivateProductAPITest(TestCase):
         # Test viewing product detail
         product = sample_product(user=self.user)
         product.tags.add(sample_tag(user=self.user))
-        product.ingredients.add(sample_ingredient(user=self.user))
+        product.categories.add(sample_category(user=self.user))
 
         url = detail_url(product.id)
         res = self.client.get(url)
@@ -123,7 +123,7 @@ class PrivateProductAPITest(TestCase):
             'time_minutes': 30,
             'price': 5.00
         }
-        res = self.client.post(RECIPES_URL, payload)
+        res = self.client.post(PRODUCTS_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         product = Product.objects.get(id=res.data['id'])
@@ -140,7 +140,7 @@ class PrivateProductAPITest(TestCase):
             'time_minutes': 30,
             'price': 10.00
         }
-        res = self.client.post(RECIPES_URL, payload)
+        res = self.client.post(PRODUCTS_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         product = Product.objects.get(id=res.data['id'])
@@ -149,25 +149,25 @@ class PrivateProductAPITest(TestCase):
         self.assertIn(tag1, tags)
         self.assertIn(tag2, tags)
 
-    def test_create_product_with_ingredients(self):
-        """Test creating product with ingredients"""
-        ingredient1 = sample_ingredient(user=self.user, name='Ingredient 1')
-        ingredient2 = sample_ingredient(user=self.user, name='Ingredient 2')
+    def test_create_product_with_categories(self):
+        """Test creating product with categories"""
+        category1 = sample_category(user=self.user, name='Category 1')
+        category2 = sample_category(user=self.user, name='Category 2')
         payload = {
-            'title': 'Test product with ingredients',
-            'ingredients': [ingredient1.id, ingredient2.id],
+            'title': 'Test product with categories',
+            'categories': [category1.id, category2.id],
             'time_minutes': 45,
             'price': 15.00
         }
 
-        res = self.client.post(RECIPES_URL, payload)
+        res = self.client.post(PRODUCTS_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         product = Product.objects.get(id=res.data['id'])
-        ingredients = product.ingredients.all()
-        self.assertEqual(ingredients.count(), 2)
-        self.assertIn(ingredient1, ingredients)
-        self.assertIn(ingredient2, ingredients)
+        categories = product.categories.all()
+        self.assertEqual(categories.count(), 2)
+        self.assertIn(category1, categories)
+        self.assertIn(category2, categories)
 
     def test_partial_update_product(self):
         # Test updating product with patch
@@ -260,7 +260,7 @@ class ProductImageUploadTests(TestCase):
         product3 = sample_product(user=self.user, title='Fish and chips')
 
         res = self.client.get(
-            RECIPES_URL,
+            PRODUCTS_URL,
             {'tags': '{},{}'.format(tag1.id, tag2.id)}
         )
 
@@ -271,19 +271,19 @@ class ProductImageUploadTests(TestCase):
         self.assertIn(serializer2.data, res.data)
         self.assertNotIn(serializer3.data, res.data)
 
-    def test_filter_products_by_ingredients(self):
-        """Test returning products with specific ingredients"""
+    def test_filter_products_by_categories(self):
+        """Test returning products with specific categories"""
         product1 = sample_product(user=self.user, title='Posh beans on toast')
         product2 = sample_product(user=self.user, title='Chicken cacciatore')
-        ingredient1 = sample_ingredient(user=self.user, name='Feta cheese')
-        ingredient2 = sample_ingredient(user=self.user, name='Chicken')
-        product1.ingredients.add(ingredient1)
-        product2.ingredients.add(ingredient2)
+        category1 = sample_category(user=self.user, name='Feta cheese')
+        category2 = sample_category(user=self.user, name='Chicken')
+        product1.categories.add(category1)
+        product2.categories.add(category2)
         product3 = sample_product(user=self.user, title='Steak and mushrooms')
 
         res = self.client.get(
-            RECIPES_URL,
-            {'ingredients': '{},{}'.format(ingredient1.id, ingredient2.id)}
+            PRODUCTS_URL,
+            {'categories': '{},{}'.format(category1.id, category2.id)}
         )
 
         serializer1 = ProductSerializer(product1)

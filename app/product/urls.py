@@ -5,11 +5,12 @@ from product import views
 
 router = DefaultRouter()
 router.register('tags', views.TagViewSet)
-router.register('ingredients', views.IngredientViewSet)
-router.register('products', views.ProductViewset)
+router.register('categories', views.CategoryViewSet)
+router.register('myproducts', views.ProductViewset, basename='myproducts')
+router.register('products', views.MyProductViewset, basename='products')
 
 app_name = 'product'
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
 ]
